@@ -2,7 +2,7 @@ Import TEIs
 ===========
 
 `import_teis.py` imports DHIS2 "Quarantine Site" Tracked Entity
-Instances as CommCare "facility" cases.
+Instances as CommCare "quarantine_facility" cases.
 
 Requires Python 3.5 or higher.
 
@@ -10,8 +10,8 @@ Requires Python 3.5 or higher.
 
 1. Clone the repository and install Python requirements:
 
-        $ git clone https://github.com/dimagi/import_tes.git
-        $ cd import_tes
+        $ git clone https://github.com/Sierra-Leone-COVID-19/import_sites.git
+        $ cd import_sites
         $ pip install -r requirements.txt
 
 2. Set environment variables for your credentials:
