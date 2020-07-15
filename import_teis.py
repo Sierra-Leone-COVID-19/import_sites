@@ -252,12 +252,17 @@ def save_cases(cases):
     Saves cases to a temporary file. Returns the file object as a
     context object. Deletes the file after it has been used.
     """
-    attribute_case_property_names = []
-    for case_property in CASE_PROPERTY_MAP['attributes'].values():
-        attribute_case_property_names.extend(get_property_names(case_property))
+    attribute_case_property_names = [
+        name for value in CASE_PROPERTY_MAP['attributes'].values()
+        for name in get_property_names(value)
+    ]
+    other_case_property_names = [
+        name for key, value in CASE_PROPERTY_MAP.items() if key != 'attributes'
+        for name in get_property_names(value)
+    ]
     headers = [
         'name',
-        *(v for k, v in CASE_PROPERTY_MAP.items() if k != 'attributes'),
+        *other_case_property_names,
         *attribute_case_property_names,
     ]
     data = tablib.Dataset(headers=headers)
