@@ -218,34 +218,6 @@ def map_tracked_entity_attributes(tracked_entities) -> Iterable[dict]:
         yield case_properties
 
 
-def get_case_property_values(case_property, dhis2_value) -> dict:
-    """
-    Returns a dictionary of case property names and values
-
-    >>> get_case_property_values('order', 'spam')
-    {'order': 'spam'}
-    >>> get_case_property_values({
-    ...     'case_property': 'order',
-    ...     'value_map': {'bacon': 'spam'}
-    ... }, 'bacon')
-    {'order': 'spam'}
-    >>> get_case_property_values(('order', 'menu'), 'spam')
-    {'order': 'spam', 'menu': 'spam'}
-
-    """
-    case_properties = {}
-    if isinstance(case_property, (list, tuple)):
-        for p in case_property:
-            case_properties.update(get_case_property_values(p, dhis2_value))
-    elif isinstance(case_property, str):
-        case_properties[case_property] = dhis2_value
-    elif isinstance(case_property, dict):
-        property_name = case_property['case_property']
-        mapped_value = case_property['value_map'][dhis2_value]
-        case_properties[property_name] = mapped_value
-    return case_properties
-
-
 @contextmanager
 def save_cases(cases):
     """
@@ -292,6 +264,34 @@ def get_case_property_names(case_property) -> list:
         return [case_property]
     if isinstance(case_property, dict):
         return [case_property['case_property']]
+
+
+def get_case_property_values(case_property, dhis2_value) -> dict:
+    """
+    Returns a dictionary of case property names and values
+
+    >>> get_case_property_values('order', 'spam')
+    {'order': 'spam'}
+    >>> get_case_property_values({
+    ...     'case_property': 'order',
+    ...     'value_map': {'bacon': 'spam'}
+    ... }, 'bacon')
+    {'order': 'spam'}
+    >>> get_case_property_values(('order', 'menu'), 'spam')
+    {'order': 'spam', 'menu': 'spam'}
+
+    """
+    case_properties = {}
+    if isinstance(case_property, (list, tuple)):
+        for p in case_property:
+            case_properties.update(get_case_property_values(p, dhis2_value))
+    elif isinstance(case_property, str):
+        case_properties[case_property] = dhis2_value
+    elif isinstance(case_property, dict):
+        property_name = case_property['case_property']
+        mapped_value = case_property['value_map'][dhis2_value]
+        case_properties[property_name] = mapped_value
+    return case_properties
 
 
 def bulk_upload_cases(tempfile):
