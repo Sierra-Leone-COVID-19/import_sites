@@ -28,6 +28,26 @@ COMMCARE_BASE_URL = 'https://www.commcarehq.org/'
 COMMCARE_PROJECT_SPACE = 'sl-demo'
 COMMCARE_CASE_TYPE = 'quarantine_facility'
 
+ORG_UNIT_TO_LOCATION_ID_MAP = {
+    # DHIS2 OrgUnit ID: CommCare location ID
+    'zTHjIvPmPI0': 'b8c3c4514b9d4f2e8057ef51e14c3736',  # Bo
+    'ucyuSTA19cP': '0d028b468f584d7e98908036fecc5bf8',  # Bombali
+    'iQgaTATK59f': '635b027b51f1497b85b79623f6903372',  # Bonthe
+    'pWb43ue4nt8': '031d11add3bd4426a405b2c6f82f946f',  # Falaba
+    'oWaJJJLCWzI': '79af11227ba74f25acca227fdffc543c',  # Kailahun
+    'Ba6McOxy6D2': '1f7a65aec4dc4f209bca50356620fda9',  # Kambia
+    'x4tRoN2ue9w': 'b692666cf2994a2aad85363b30e36568',  # Karene
+    'gheAIXur8EJ': '175024c160474ac6aaa84a070a850d8d',  # Kenema
+    'Y7YrGOsu9fp': 'b069228c635a4885aa3c105cc6eabf6c',  # Koinadugu
+    'P7LlNb9MosU': 'e16a8b8b93f7488b9c2eceb5f6ffad8d',  # Kono
+    'btW1NRETLww': '74a29d76d0dc490f80269b09dbc8416a',  # Moyamba
+    'RjOUVJDV1Dl': '9709ddb2cfa9412ba4f0bf1ec73cd392',  # Port Loko
+    'ywV0ByvR7xW': 'badc81c939f54523a22668f79408b1e1',  # Pujehun
+    'yA18sXAwZJo': '3aa2d8127850415fa66b06e9b2b9afc2',  # Tonkolili
+    'knrO5gazmom': '96f0546c6c9243279ea4e7366c753d59',  # Western Area Rural
+    'PMLlCzM0mWT': 'e8654ba06c0f4339a92c8bb99f4c2481',  # Western Area Urban
+}
+
 # Map DHIS2 tracked entity attributes and JSON properties to CommCare
 # case properties.
 CASE_PROPERTY_MAP = {
@@ -36,9 +56,15 @@ CASE_PROPERTY_MAP = {
     # NOTE: external_id is set to DHIS2 UID, not Site ID
     'trackedEntityInstance': 'external_id',
 
-    # NOTE: DHIS2 orgUnit maps to CommCare owner; Cases are owned by
-    #       their district.
-    'orgUnit': 'owner_id',
+    'orgUnit': ({
+        # CommCare cases are owned by their district.
+        'case_property': 'owner_id',
+        'value_map': ORG_UNIT_TO_LOCATION_ID_MAP,
+    }, {
+        # orgUnit is also mapped to facility_district_id
+        'case_property': 'facility_district_id',
+        'value_map': ORG_UNIT_TO_LOCATION_ID_MAP,
+    }),
 
     'attributes': {
         'X0UVSJM0r8Y': (  # Address
@@ -68,33 +94,6 @@ CASE_PROPERTY_MAP = {
         'AtcW78731s8': 'dhis2_remarks',  # Remarks
     }
 }
-
-# Map DHIS2 organisation units to CommCare locations.
-ORG_UNIT_MAP = {
-    # DHIS2 OrgUnit ID: CommCare location ID
-    # 'Plmg8ikyfrK': 'not-a-real-location-id',  # Sierra Leone
-    'zTHjIvPmPI0': 'b8c3c4514b9d4f2e8057ef51e14c3736',  # Bo District
-    'ucyuSTA19cP': '0d028b468f584d7e98908036fecc5bf8',  # Bombali District
-    'iQgaTATK59f': '635b027b51f1497b85b79623f6903372',  # Bonthe District
-    'pWb43ue4nt8': '031d11add3bd4426a405b2c6f82f946f',  # Falaba District
-    'oWaJJJLCWzI': '79af11227ba74f25acca227fdffc543c',  # Kailahun District
-    'Ba6McOxy6D2': '1f7a65aec4dc4f209bca50356620fda9',  # Kambia District
-    'x4tRoN2ue9w': 'b692666cf2994a2aad85363b30e36568',  # Karene District
-    'gheAIXur8EJ': '175024c160474ac6aaa84a070a850d8d',  # Kenema District
-    'Y7YrGOsu9fp': 'b069228c635a4885aa3c105cc6eabf6c',  # Koinadugu District
-    'P7LlNb9MosU': 'e16a8b8b93f7488b9c2eceb5f6ffad8d',  # Kono District
-    'btW1NRETLww': '74a29d76d0dc490f80269b09dbc8416a',  # Moyamba District
-    'RjOUVJDV1Dl': '9709ddb2cfa9412ba4f0bf1ec73cd392',  # Port Loko District
-    'ywV0ByvR7xW': 'badc81c939f54523a22668f79408b1e1',  # Pujehun District
-    'yA18sXAwZJo': '3aa2d8127850415fa66b06e9b2b9afc2',  # Tonkolili District
-    'knrO5gazmom': '96f0546c6c9243279ea4e7366c753d59',  # Western Area Rural District
-    'PMLlCzM0mWT': 'e8654ba06c0f4339a92c8bb99f4c2481',  # Western Area Urban District
-}
-
-# If a TEI has an organisation unit that is not mapped to a CommCare
-# owner, should an error be raised? If set to `False`, the TEI will
-# be skipped.
-RAISE_ERROR_ON_MISSING_ORG_UNIT = True
 
 
 def get_name(tracked_entity) -> str:
@@ -158,7 +157,7 @@ def get_tracked_entities_from_dhis2() -> Iterable[dict]:
     }
     headers = {'Accept': 'application/json'}
     auth = (os.environ['DHIS2_USERNAME'], os.environ['DHIS2_PASSWORD'])
-    for ou in ORG_UNIT_MAP:
+    for ou in ORG_UNIT_TO_LOCATION_ID_MAP:
         params.update({
             'ou': ou,
             'page': 1,
@@ -179,42 +178,33 @@ def get_tracked_entities_from_dhis2() -> Iterable[dict]:
 
 def map_tracked_entity_attributes(tracked_entities) -> Iterable[dict]:
     """
-    Takes an iterable of tracked entities, and returns an interable of
+    Takes an iterable of tracked entities, and returns an iterable of
     dictionaries with tracked entity attributes mapped to case property
     values.
     """
     for tracked_entity in tracked_entities:
-        dhis2_id_property = CASE_PROPERTY_MAP['trackedEntityInstance']
-        org_unit_property = CASE_PROPERTY_MAP['orgUnit']
-
-        name = get_name(tracked_entity)
-        tei_id = tracked_entity['trackedEntityInstance']
-        org_unit = tracked_entity['orgUnit']
-        if org_unit not in ORG_UNIT_MAP:
-            if RAISE_ERROR_ON_MISSING_ORG_UNIT:
-                raise KeyError(
-                    'CommCare location cannot be determined for organisation '
-                    f'unit {org_unit!r}. Please add the organisation unit to '
-                    '`ORG_UNIT_MAP`, or set `RAISE_ERROR_ON_MISSING_ORG_UNIT '
-                    '= False`.'
-                )
+        case_properties = {'name': get_name(tracked_entity)}
+        for tracked_entity_property in CASE_PROPERTY_MAP:
+            if tracked_entity_property == 'attributes':
+                # Loop over the tracked entity attributes. Pick out the ones
+                # that we want to save to the CommCare case (i.e. the ones in
+                # CASE_PROPERTY_MAP). Update `case_properties` with their case
+                # property names and CommCare values.
+                tracked_entity_attributes = CASE_PROPERTY_MAP['attributes']
+                for attr in tracked_entity['attributes']:
+                    attribute_id = attr['attribute']
+                    if attribute_id in tracked_entity_attributes:
+                        case_property = tracked_entity_attributes[attribute_id]
+                        dhis2_value = attr['value']
+                        case_properties.update(get_case_property_values(
+                            case_property, dhis2_value))
             else:
-                print(f'Skipping TEI {tei_id!r} ({name}): Unknown org unit '
-                      f'{org_unit!r}')
-                continue
-        commcare_location = ORG_UNIT_MAP[org_unit]
-
-        case_properties = {
-            'name': name,
-            dhis2_id_property: tei_id,
-            org_unit_property: commcare_location,
-        }
-        for attr in tracked_entity['attributes']:
-            if attr['attribute'] in CASE_PROPERTY_MAP['attributes']:
-                dhis2_id = attr['attribute']
-                case_property = CASE_PROPERTY_MAP['attributes'][dhis2_id]
-                dict_ = get_case_property_values(case_property, attr['value'])
-                case_properties.update(dict_)
+                # tracked_entity_property is a top-level property like
+                # "orgUnit" or its uid
+                case_property = CASE_PROPERTY_MAP[tracked_entity_property]
+                dhis2_value = tracked_entity[tracked_entity_property]
+                case_properties.update(get_case_property_values(
+                    case_property, dhis2_value))
         yield case_properties
 
 
