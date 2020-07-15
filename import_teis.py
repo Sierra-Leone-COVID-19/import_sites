@@ -254,11 +254,11 @@ def save_cases(cases):
     """
     attribute_case_property_names = [
         name for value in CASE_PROPERTY_MAP['attributes'].values()
-        for name in get_property_names(value)
+        for name in get_case_property_names(value)
     ]
     other_case_property_names = [
         name for key, value in CASE_PROPERTY_MAP.items() if key != 'attributes'
-        for name in get_property_names(value)
+        for name in get_case_property_names(value)
     ]
     headers = [
         'name',
@@ -275,19 +275,19 @@ def save_cases(cases):
         yield tempfile
 
 
-def get_property_names(case_property) -> list:
+def get_case_property_names(case_property) -> list:
     """
     Returns a list of case property names from a CASE_PROPERTY_MAP value
 
-    >>> get_property_names('order')
+    >>> get_case_property_names('order')
     ['order']
-    >>> get_property_names({'case_property': 'order'})
+    >>> get_case_property_names({'case_property': 'order'})
     ['order']
-    >>> get_property_names(('order', 'menu'))
+    >>> get_case_property_names(('order', 'menu'))
     ['order', 'menu']
     """
     if isinstance(case_property, (list, tuple)):
-        return [n for p in case_property for n in get_property_names(p)]
+        return [n for p in case_property for n in get_case_property_names(p)]
     if isinstance(case_property, str):
         return [case_property]
     if isinstance(case_property, dict):
