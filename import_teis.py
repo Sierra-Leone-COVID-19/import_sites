@@ -134,7 +134,7 @@ def get_name(tracked_entity) -> str:
     name = [a['value'] for a in attrs if a['attribute'] == 'YUAMGTtigwP']
     if address and address[0]:
         return address[0]
-    elif name and name[0] and len(name[0] > 4):
+    elif name and name[0] and len(name[0]) > 4:
         without_prefix = name[0][4:]
         underscores_replaced = without_prefix.replace('_', ' ')
         return underscores_replaced.title()
